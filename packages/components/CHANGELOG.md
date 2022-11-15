@@ -29,6 +29,8 @@
 -   `MenuGroup`: Convert to TypeScript ([#45617](https://github.com/WordPress/gutenberg/pull/45617)).
 -   `useCx`: fix story to satisfy the `react-hooks/exhaustive-deps` eslint rule ([#45614](https://github.com/WordPress/gutenberg/pull/45614))
 -   Activate the `react-hooks/exhuastive-deps` eslint rule for the Components package ([#41166](https://github.com/WordPress/gutenberg/pull/41166))
+-   Add `useUpdateEffect` hook to the previously added `react-hooks/exhuastive-deps` eslint check ([#45771](https://github.com/WordPress/gutenberg/pull/45771)).
+-   `ToggleGroupControl`: Update `useUpdateEffect` usages to pass `exhaustive-deps` eslint rule ([#45771](https://github.com/WordPress/gutenberg/pull/45771)).
 
 ### Experimental
 
