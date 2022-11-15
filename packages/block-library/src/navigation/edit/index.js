@@ -7,6 +7,7 @@ import classnames from 'classnames';
  * WordPress dependencies
  */
 import {
+	useCallback,
 	useState,
 	useEffect,
 	useRef,
@@ -16,6 +17,7 @@ import {
 import { addQueryArgs } from '@wordpress/url';
 import {
 	__experimentalOffCanvasEditor as OffCanvasEditor,
+	BlockControls,
 	InspectorControls,
 	useBlockProps,
 	__experimentalRecursionProvider as RecursionProvider,
@@ -30,7 +32,7 @@ import {
 } from '@wordpress/block-editor';
 import { EntityProvider, store as coreStore } from '@wordpress/core-data';
 
-import { useDispatch } from '@wordpress/data';
+import { useSelect, useDispatch } from '@wordpress/data';
 import {
 	PanelBody,
 	ToggleControl,
@@ -40,11 +42,14 @@ import {
 	Spinner,
 	__experimentalHStack as HStack,
 	__experimentalHeading as Heading,
+	ToolbarButton,
+	ToolbarGroup,
 } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 import { speak } from '@wordpress/a11y';
 import { createBlock } from '@wordpress/blocks';
 import { close, Icon } from '@wordpress/icons';
+import { store as interfaceStore } from '@wordpress/interface';
 
 /**
  * Internal dependencies
@@ -69,6 +74,7 @@ import useConvertClassicToBlockMenu, {
 import useCreateNavigationMenu from './use-create-navigation-menu';
 import { useInnerBlocks } from './use-inner-blocks';
 import { detectColors } from './utils';
+import { store as editSiteStore } from '../../../../edit-site/src/store'; // TODO - update reference when package is published
 
 function Navigation( {
 	attributes,
@@ -690,6 +696,51 @@ function Navigation( {
 		/>
 	);
 
+	const NAVIGATION_SIDEBAR_NAME = 'edit-site/block-inspector';
+	const {
+		isNavigationSidebarOpen,
+	} = useSelect(
+		( select ) => {
+			return {
+				isNavigationSidebarOpen:
+					select( interfaceStore ).getActiveComplementaryArea(
+						editSiteStore.name
+					) === NAVIGATION_SIDEBAR_NAME,
+			};
+		}
+	);
+	const { enableComplementaryArea, disableComplementaryArea } = useDispatch( interfaceStore );
+	const toggleNavigationSidebar = useCallback( () => {
+		const toggleComplementaryArea = isNavigationSidebarOpen
+			? disableComplementaryArea
+			: enableComplementaryArea;
+		toggleComplementaryArea( editSiteStore.name, NAVIGATION_SIDEBAR_NAME );
+	}, [ isNavigationSidebarOpen ] );
+	const EditMenuToolbarButton = () => {
+		if ( ! isOffCanvasNavigationEditorEnabled ) {
+			return null;
+		}
+
+		return (
+			<BlockControls>
+				<ToolbarGroup>
+					<ToolbarButton
+						className="components-toolbar__control"
+						label={
+							isNavigationSidebarOpen
+								? __( 'Close list view' )
+								: __( 'Open list view' )
+						}
+						onClick={ toggleNavigationSidebar }
+						isActive={ isNavigationSidebarOpen }
+					>
+						{ __( 'Edit menu' ) }
+					</ToolbarButton>
+				</ToolbarGroup>
+			</BlockControls>
+		);
+	};
+
 	if ( hasUnsavedBlocks && ! isCreatingNavigationMenu ) {
 		return (
 			<TagName { ...blockProps }>
@@ -742,6 +793,7 @@ function Navigation( {
 					</PanelBody>
 				</InspectorControls>
 				{ stylingInspectorControls }
+				<EditMenuToolbarButton />
 				<ResponsiveWrapper
 					id={ clientId }
 					onToggle={ setResponsiveMenuVisibility }
@@ -814,6 +866,7 @@ function Navigation( {
 						) }
 					</PanelBody>
 				</InspectorControls>
+				<EditMenuToolbarButton />
 				<Warning>
 					{ __(
 						'Navigation menu has been deleted or is unavailable. '
@@ -986,6 +1039,7 @@ function Navigation( {
 
 				{ ! isLoading && (
 					<TagName { ...blockProps }>
+						<EditMenuToolbarButton />
 						<ResponsiveWrapper
 							id={ clientId }
 							onToggle={ setResponsiveMenuVisibility }
